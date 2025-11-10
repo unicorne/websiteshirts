@@ -1,0 +1,334 @@
+/* --- Global Styles & Variables --- */
+:root {
+    --primary-color: #1a1a1a; /* Dark gray for text */
+    --secondary-color: #f4f4f4; /* Light gray background */
+    --accent-color: #333;       /* Button color */
+    --font-family: 'Helvetica Neue', Arial, sans-serif;
+    --container-width: 1200px;
+    --border-radius: 5px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-family);
+    line-height: 1.6;
+    color: var(--primary-color);
+    background-color: #ffffff;
+}
+
+main {
+    max-width: var(--container-width);
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* --- Header & Navigation --- */
+.main-header {
+    border-bottom: 1px solid var(--secondary-color);
+    padding: 1rem 0;
+    background-color: #fff;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.navbar {
+    max-width: var(--container-width);
+    margin: 0 auto;
+    padding: 0 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 1.5rem;
+}
+
+.nav-links a {
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.nav-links a:hover {
+    color: #888;
+}
+
+.nav-icons {
+    display: flex;
+    gap: 1rem;
+    font-size: 1.2rem;
+}
+
+/* Icon button used in header for account/cart */
+.icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0.25rem;
+    border-radius: 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.icon-button:hover,
+.icon-button:focus {
+    background-color: #f4f4f4;
+    border-color: #e6e6e6;
+    transform: translateY(-1px);
+    outline: none;
+}
+
+.icon-button svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+    fill: none;
+    stroke: var(--primary-color);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Ensure the header icons remain visually balanced on small screens */
+@media (max-width: 480px) {
+    .icon-button { width: 36px; height: 36px; }
+    .icon-button svg { width: 18px; height: 18px; }
+}
+
+/* --- Footer --- */
+.main-footer {
+    text-align: center;
+    padding: 2rem;
+    margin-top: 3rem;
+    background-color: var(--secondary-color);
+    color: #777;
+    font-size: 0.9rem;
+}
+
+/* --- Homepage: Hero & Product Grid --- */
+.hero {
+    text-align: center;
+    padding: 4rem 1rem;
+    background-color: var(--secondary-color);
+    margin: -2rem auto 3rem; /* Extends to full width */
+    max-width: 100%;
+}
+
+.hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.homepage-main h2 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    font-weight: 600;
+}
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.product-card {
+    border: 1px solid #e0e0e0;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    transition: box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+.product-card img {
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+}
+
+.product-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 0.75rem 1rem 0.25rem;
+}
+
+.product-card .price {
+    font-size: 1rem;
+    color: #555;
+    padding: 0 1rem 1rem;
+}
+
+/* --- Product Page --- */
+.product-container {
+    display: flex;
+    gap: 2rem;
+}
+
+.product-images {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.product-images img {
+    border-radius: var(--border-radius);
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+}
+
+.product-info {
+    flex: 1;
+    padding: 1rem;
+}
+
+.product-info h1 {
+    font-size: 2.2rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.product-info .price {
+    font-size: 1.5rem;
+    color: #333;
+    margin: 1rem 0;
+}
+
+.product-info .description {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 2rem;
+}
+
+.product-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
+.product-form label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #444;
+}
+
+.select-wrapper {
+    position: relative;
+}
+
+/* Style the select box */
+.product-form select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 100%;
+    padding: 0.8rem 1rem;
+    font-size: 1rem;
+    font-family: var(--font-family);
+    border: 1px solid #ccc;
+    border-radius: var(--border-radius);
+    background-color: #fff;
+    cursor: pointer;
+}
+
+/* Add custom dropdown arrow */
+.select-wrapper::after {
+    content: '▼';
+    font-size: 0.8rem;
+    color: #555;
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.add-to-cart-btn {
+    padding: 1rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    background-color: var(--accent-color);
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-transform: uppercase;
+}
+
+.add-to-cart-btn:hover {
+    background-color: #000;
+}
+
+/* --- Responsive (Mobile) --- */
+@media (max-width: 768px) {
+    .nav-links {
+        display: none; /* Simplifies nav for demo */
+    }
+
+    .logo {
+        font-size: 1.3rem;
+    }
+    
+    .hero h1 {
+        font-size: 2rem;
+    }
+
+    .product-grid {
+        grid-template-columns: 1fr 1fr; /* 2 columns on mobile */
+        gap: 1rem;
+    }
+
+    .product-card h3 {
+        font-size: 1rem;
+    }
+
+    .product-container {
+        flex-direction: column; /* Stacks images and info */
+    }
+
+    .product-images {
+        grid-template-columns: 1fr; /* Stacks the 2 images */
+    }
+
+    .product-info {
+        padding: 0;
+    }
+
+    .product-info h1 {
+        font-size: 1.8rem;
+    }
+}
