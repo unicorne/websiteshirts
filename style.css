@@ -84,6 +84,14 @@ a {
     font-size: 1.2rem;
 }
 
+/* Logo image inside the nav (.logo) */
+.logo img {
+    display: block;
+    max-width: 160px;
+    width: 100%;
+    height: auto;
+}
+
 /* Icon button used in header for account/cart */
 .icon-button {
     display: inline-flex;
@@ -145,6 +153,37 @@ a {
     max-width: 100%;
 }
 
+/* Gender buttons in hero for quick discovery */
+.gender-buttons {
+    margin-top: 1.25rem;
+    display: inline-flex;
+    gap: 0.75rem;
+}
+
+.gender-btn {
+    padding: 0.6rem 1rem;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 999px;
+    border: 1px solid rgba(0,0,0,0.08);
+    background: #fff;
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: transform 0.08s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.gender-btn:hover,
+.gender-btn:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    outline: none;
+}
+
+@media (max-width: 480px) {
+    .gender-buttons { flex-direction: column; gap: 0.5rem; }
+    .gender-btn { width: 160px; margin: 0 auto; }
+}
+
 .hero h1 {
     font-size: 2.5rem;
     margin-bottom: 0.5rem;
@@ -200,6 +239,7 @@ a {
 .product-images {
     flex: 1;
     display: grid;
+    /* Two-column layout on desktop (side-by-side); mobile override keeps single column */
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
 }
@@ -228,7 +268,9 @@ a {
 }
 
 .product-info .description {
-    font-size: 1rem;
+    /* Slightly larger and bold — applies to <p class="description"> or <h1 class="description"> */
+    font-size: 1.3rem;
+    font-weight: 700;
     color: #555;
     margin-bottom: 2rem;
 }
@@ -274,6 +316,29 @@ a {
     top: 50%;
     transform: translateY(-50%);
     pointer-events: none;
+}
+
+/* Static color display (non-interactive) shown in product forms */
+.color-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.color-swatch {
+    width: 34px;
+    height: 34px;
+    background: #456583; /* Blue */
+    border-radius: 6px;
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04) inset;
+    flex: 0 0 34px;
+}
+
+.color-name {
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 1rem;
 }
 
 .add-to-cart-btn {

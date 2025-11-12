@@ -10,7 +10,9 @@
 
     <header class="main-header">
         <nav class="navbar">
-            <div class="logo">ChicAttire</div>
+            <div class="logo">
+                <img src="assets/logo.jpeg" alt="ChicAttire logo">
+            </div>
             <ul class="nav-links">
                 <li><a href="index.html">Home</a></li>
                 <li><a href="#">New Arrivals</a></li>
@@ -28,6 +30,10 @@
         <section class="hero">
             <h1>Our New Collection</h1>
             <p>Timeless pieces, modern design. Discover your new look.</p>
+            <div class="gender-buttons" aria-label="Choose gender for a tailored pick">
+                <button type="button" class="gender-btn" id="btn-male">Male</button>
+                <button type="button" class="gender-btn" id="btn-female">Female</button>
+            </div>
         </section>
 
         <h2>Featured Outfits</h2>
@@ -76,4 +82,25 @@
     </footer>
 
 </body>
+
+<script>
+// Picks a random page from the given array and navigates there.
+function pickRandomAndNavigate(pages) {
+    if (!Array.isArray(pages) || pages.length === 0) return;
+    var idx = Math.floor(Math.random() * pages.length);
+    // Use location.href so it behaves like a normal navigation
+    window.location.href = pages[idx];
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var maleBtn = document.getElementById('btn-male');
+    var femaleBtn = document.getElementById('btn-female');
+
+    var malePages = ['product-01.html', 'product-02.html', 'product-03.html'];
+    var femalePages = ['product-04.html', 'product-05.html', 'product-06.html'];
+
+    if (maleBtn) maleBtn.addEventListener('click', function () { pickRandomAndNavigate(malePages); });
+    if (femaleBtn) femaleBtn.addEventListener('click', function () { pickRandomAndNavigate(femalePages); });
+});
+</script>
 </html>

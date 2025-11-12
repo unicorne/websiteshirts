@@ -10,12 +10,13 @@
 
     <header class="main-header">
         <nav class="navbar">
-            <div class="logo">ChicAttire</div>
+            <div class="logo">
+                <img src="assets/logo.jpeg" alt="ChicAttire logo">
+            </div>
             <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="#">New Arrivals</a></li>
-                <li><a href="#">Categories</a></li>
-                <li><a href="#">Sale</a></li>
+                <li><a href="#">Home ></a></li>
+                <li><a href="#">Jeans ></a></li>
+                <li><a href="#">Baggy Jeans</a></li>
             </ul>
             <div class="nav-icons">
                 <!-- Account / profile icon (kept simple) -->
@@ -42,18 +43,16 @@
         <div class="product-container">
             
             <div class="product-images">
-                <img src="assets/03/01.png" alt="Model 1 wearing The Weekend Set">
-                <img src="assets/03/02.png" alt="Model 2 wearing The Weekend Set">
+                <img src="assets/W3/W5.jpeg" alt="Model 1 wearing The Weekend Set">
+                <img src="assets/W3/W6.jpeg" alt="Model 2 wearing The Weekend Set">
             </div>
 
             <div class="product-info">
-                <h1>Autumn Collection</h1>
                 
-                <p class="price">29.99€</p>
+                
                 
                 <p class="description">
-                    Baggy Shirt with Regular Fit. 100% Cotton.
-                </p>
+                    Baggy Jeans with Regular Fit</p>
 
                 <form class="product-form">
                     <label for="size-select">Select Size:</label>
@@ -67,15 +66,10 @@
                         </select>
                     </div>
 
-                    <label for="color-select">Select Color:</label>
-                    <div class="select-wrapper">
-                        <select id="color-select" name="color">
-                            <option value="black">Black</option>
-                            <option value="white">White</option>
-                            <option value="red">Red</option>
-                            <option value="blue">Blue</option>
-                            <option value="green">Green</option>
-                        </select>
+                    <label>Color:</label>
+                    <div class="color-display" aria-hidden="true">
+                        <span class="color-swatch" aria-hidden="true"></span>
+                        <span class="color-name">Blue</span>
                     </div>
 
                     <button type="button" class="add-to-cart-btn">
@@ -88,7 +82,7 @@
     </main>
 
     <footer class="main-footer">
-        <p>&copy; 2025 ChicAttire. All rights reserved. This is a non-functional demo website.</p>
+        <p>&copy; 2025 Jeens. All rights reserved. </p>
     </footer>
 
 </body>
