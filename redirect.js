@@ -9,7 +9,9 @@
     // 15000 ms = 15 seconds
     setTimeout(function () {
       // Use location.replace so the back button won't return to the timed page
-      window.location.replace('dummy.html');
+      // Redirect to the external Qualtrics URL provided by the user. Preserve the
+      // Qualtrics field token `${e://Field/ResponseID}` exactly as requested.
+      window.location.replace('https://unikoelnwiso.eu.qualtrics.com/jfe/form/SV_etzF5oUkRRMQuSa?Q_R=${e://Field/ResponseID}');
     }, 15000);
   }
 
