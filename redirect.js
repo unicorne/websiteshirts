@@ -11,7 +11,7 @@
     }
   }
 
-  const targetSurvey = "https://unikoelnwiso.eu.qualtrics.com/jfe/form/SV_d4Ll60IrQ3kvojQ";
+  const targetSurvey = "https://unikoelnwiso.eu.qualtrics.com/jfe/form/SV_d4lL60IrQ3kvojQ";
 
   function startTimer() {
     const rid = getParam("rid");
