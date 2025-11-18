@@ -1,4 +1,4 @@
-// Redirect after 15 seconds to Survey B with ?rid=...
+// Redirect after 15 seconds to Survey B with ?rid=...&lang=...
 (function () {
   if (typeof window === 'undefined') return;
 
@@ -15,6 +15,7 @@
 
   function startTimer() {
     const rid = getParam("rid");
+    const lang = getParam("lang");
 
     // If no rid → show message
     if (!rid) {
@@ -24,9 +25,18 @@
       return;
     }
 
+    // Build redirect URL
+    const params = new URLSearchParams();
+    params.set("rid", rid);
+
+    if (lang) {
+      params.set("lang", lang);
+    }
+
+    const redirectUrl = `${targetSurvey}?${params.toString()}`;
+
     // Start delayed redirect
     setTimeout(() => {
-      const redirectUrl = `${targetSurvey}?rid=${encodeURIComponent(rid)}`;
       window.location.replace(redirectUrl);
     }, 15000);
   }
