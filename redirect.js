@@ -38,7 +38,7 @@
     // Start delayed redirect
     setTimeout(() => {
       window.location.replace(redirectUrl);
-    }, 15000);
+    }, 20000);
   }
 
   if (document.readyState === "complete" || document.readyState === "interactive") {
