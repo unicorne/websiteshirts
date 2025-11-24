@@ -14,8 +14,8 @@
   const targetSurvey = "https://unikoelnwiso.eu.qualtrics.com/jfe/form/SV_d4lL60IrQ3kvojQ";
 
   function startTimer() {
-    const rid = getParam("Respondent_ID");
-    const lang = getParam("Survey_Language");
+    const rid = getParam("rid");
+    const lang = getParam("lang");
 
     // If no rid → show message
     if (!rid) {
@@ -27,10 +27,10 @@
 
     // Build redirect URL
     const params = new URLSearchParams();
-    params.set("Respondent_ID", rid);
+    params.set("rid", rid);
 
     if (lang) {
-      params.set("Survey_Language", lang);
+      params.set("lang", lang);
     }
 
     const redirectUrl = `${targetSurvey}?${params.toString()}`;
