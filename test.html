@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GeoQuest: World Traveler</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRS9BMY=" crossorigin="" />
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            overscroll-behavior: none;
+        }
+
+        /* Custom Leaflet Markers */
+        .custom-div-icon {
+            background: transparent;
+            border: none;
+        }
+        
+        .marker-pin {
+            width: 30px;
+            height: 30px;
+            border-radius: 50% 50% 50% 0;
+            position: absolute;
+            transform: rotate(-45deg);
+            left: 50%;
+            top: 50%;
+            margin: -15px 0 0 -15px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+
+        .marker-pin.guess {
+            background: #ef4444; /* Red */
+        }
+
+        .marker-pin.actual {
+            background: #10b981; /* Green */
+        }
+
+        .marker-pin::after {
+            content: '';
+            width: 14px;
+            height: 14px;
+            margin: 8px 0 0 8px;
+            background: #fff;
+            position: absolute;
+            border-radius: 50%;
+        }
+
+        /* Pulse animation for the target location */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.33); }
+            80%, 100% { opacity: 0; }
+        }
+        
+        .pulse-ring {
+            content: '';
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid #10b981;
+            position: absolute;
+            top: -3px; 
+            left: -3px;
+            animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+
+        /* Animations */
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 1; }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+        .animate-bounce-in {
+            animation: bounceIn 0.5s cubic-bezier(0.215, 0.61, 0.355, 1) both;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 h-screen w-screen overflow-hidden flex flex-col text-slate-800">
+
+    <!-- Header / HUD -->
+    <div class="h-16 bg-white shadow-md z-20 flex items-center justify-between px-4 lg:px-8 relative shrink-0">
+        <div class="flex items-center gap-3">
+            <div class="bg-blue-600 text-white p-2 rounded-lg shadow">
+                <i class="fa-solid fa-earth-americas"></i>
+            </div>
+            <h1 class="font-bold text-lg md:text-xl tracking-tight hidden md:block">GeoQuest</h1>
+        </div>
+
+        <!-- Game Stats (Hidden on start screen) -->
+        <div id="game-stats" class="flex items-center gap-4 md:gap-8 opacity-0 transition-opacity duration-500">
+            <div class="text-center">
+                <p class="text-xs text-slate-500 font-bold uppercase">Level</p>
+                <p class="font-black text-lg leading-none" id="level-display">1/10</p>
+            </div>
+            <div class="text-center">
+                <p class="text-xs text-slate-500 font-bold uppercase">Score</p>
+                <p class="font-black text-lg text-blue-600 leading-none" id="score-display">0</p>
+            </div>
+            <div class="text-center w-12">
+                <p class="text-xs text-slate-500 font-bold uppercase">Time</p>
+                <p class="font-black text-lg text-orange-500 leading-none" id="timer-display">--</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Bar -->
+    <div id="task-bar" class="absolute top-20 left-1/2 transform -translate-x-1/2 z-[1000] bg-white/95 backdrop-blur rounded-full px-6 py-3 shadow-xl border border-slate-200 flex items-center gap-3 transition-all duration-300 -translate-y-32 pointer-events-none">
+        <span class="bg-slate-100 text-slate-600 rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm"><i class="fa-solid fa-location-dot"></i></span>
+        <div>
+            <p class="text-xs text-slate-500 uppercase font-bold">Find this location</p>
+            <h2 class="text-lg md:text-xl font-black text-slate-800" id="target-name">Loading...</h2>
+        </div>
+    </div>
+
+    <!-- Main Map Area -->
+    <div class="flex-1 relative bg-slate-200 w-full">
+        <div id="map" class="absolute inset-0 z-0 bg-[#aad3df]"></div>
+
+        <!-- Confirm Button (Floating) -->
+        <button id="confirm-btn" class="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-[1000] bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-blue-600/40 transition-all duration-300 scale-0 flex items-center gap-2 pointer-events-auto cursor-pointer">
+            <span>Confirm Location</span>
+            <i class="fa-solid fa-check"></i>
+        </button>
+    </div>
+
+    <!-- Start Screen Modal -->
+    <div id="start-screen" class="absolute inset-0 z-[2000] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+        <div class="glass-panel w-full max-w-md rounded-2xl p-8 text-center transform transition-all shadow-2xl">
+            <div class="mb-6 inline-block p-4 bg-blue-50 rounded-full">
+                <i class="fa-solid fa-map-location-dot text-4xl text-blue-600"></i>
+            </div>
+            <h1 class="text-3xl font-black mb-2 text-slate-800">GeoQuest</h1>
+            <p class="text-slate-500 mb-8">Test your geography knowledge! Pinpoint the locations on the map as quickly and accurately as possible.</p>
+            
+            <div class="space-y-3">
+                <button onclick="window.game.start('capitals')" class="w-full py-4 px-6 bg-white hover:bg-slate-50 border-2 border-slate-200 rounded-xl flex items-center justify-between group transition-colors cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <span class="bg-green-100 text-green-600 w-8 h-8 rounded-lg flex items-center justify-center"><i class="fa-solid fa-star"></i></span>
+                        <div class="text-left">
+                            <p class="font-bold text-slate-800">World Capitals</p>
+                            <p class="text-xs text-slate-500">Easy • Major cities</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-slate-600"></i>
+                </button>
+
+                <button onclick="window.game.start('cities')" class="w-full py-4 px-6 bg-white hover:bg-slate-50 border-2 border-slate-200 rounded-xl flex items-center justify-between group transition-colors cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-lg flex items-center justify-center"><i class="fa-solid fa-city"></i></span>
+                        <div class="text-left">
+                            <p class="font-bold text-slate-800">Famous Cities</p>
+                            <p class="text-xs text-slate-500">Medium • Global hubs</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-slate-600"></i>
+                </button>
+
+                <button onclick="window.game.start('landmarks')" class="w-full py-4 px-6 bg-white hover:bg-slate-50 border-2 border-slate-200 rounded-xl flex items-center justify-between group transition-colors cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <span class="bg-purple-100 text-purple-600 w-8 h-8 rounded-lg flex items-center justify-center"><i class="fa-solid fa-landmark"></i></span>
+                        <div class="text-left">
+                            <p class="font-bold text-slate-800">Landmarks</p>
+                            <p class="text-xs text-slate-500">Hard • Specific sites</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-slate-300 group-hover:text-slate-600"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Modal -->
+    <div id="result-screen" class="hidden absolute inset-0 z-[2000] flex items-end md:items-center justify-center pointer-events-none">
+        <div class="pointer-events-auto glass-panel w-full md:max-w-sm mb-0 md:mb-auto rounded-t-2xl md:rounded-2xl p-6 text-center transform transition-all shadow-2xl m-4 animate-bounce-in">
+            
+            <div class="flex justify-center -mt-12 mb-4">
+                <div id="result-badge" class="bg-blue-600 text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg border-4 border-white">
+                    A
+                </div>
+            </div>
+
+            <h2 class="text-2xl font-black text-slate-800 mb-1" id="result-title">Great Job!</h2>
+            <p class="text-slate-500 mb-6 text-sm" id="result-message">You were very close.</p>
+
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-slate-50 p-3 rounded-xl">
+                    <p class="text-xs text-slate-400 font-bold uppercase">Distance</p>
+                    <p class="font-bold text-lg text-slate-800" id="result-distance">120 km</p>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-xl">
+                    <p class="text-xs text-slate-400 font-bold uppercase">Points</p>
+                    <p class="font-bold text-lg text-green-600" id="result-points">+1500</p>
+                </div>
+            </div>
+
+            <button onclick="window.game.nextRound()" id="next-btn" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 transition-transform active:scale-95 cursor-pointer">
+                Next Location
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="game-over-screen" class="hidden absolute inset-0 z-[2000] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+        <div class="glass-panel w-full max-w-md rounded-2xl p-8 text-center shadow-2xl animate-bounce-in">
+            <div class="text-5xl mb-4">🏆</div>
+            <h2 class="text-3xl font-black text-slate-800 mb-2">Game Over!</h2>
+            <p class="text-slate-500 mb-8">Here is how you performed.</p>
+
+            <div class="bg-slate-100 rounded-2xl p-6 mb-8">
+                <p class="text-sm text-slate-500 font-bold uppercase mb-1">Final Score</p>
+                <h3 class="text-5xl font-black text-blue-600" id="final-score">0</h3>
+            </div>
+
+            <button onclick="location.reload()" class="w-full py-4 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl shadow-lg transition-transform active:scale-95 cursor-pointer">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <script>
+        // Data Sets
+        const GAME_DATA = {
+            capitals: [
+                { name: "Tokyo", country: "Japan", lat: 35.6762, lng: 139.6503 },
+                { name: "London", country: "United Kingdom", lat: 51.5074, lng: -0.1278 },
+                { name: "Canberra", country: "Australia", lat: -35.2809, lng: 149.1300 },
+                { name: "Brasília", country: "Brazil", lat: -15.8267, lng: -47.9218 },
+                { name: "Cairo", country: "Egypt", lat: 30.0444, lng: 31.2357 },
+                { name: "Ottawa", country: "Canada", lat: 45.4215, lng: -75.6972 },
+                { name: "New Delhi", country: "India", lat: 28.6139, lng: 77.2090 },
+                { name: "Paris", country: "France", lat: 48.8566, lng: 2.3522 },
+                { name: "Buenos Aires", country: "Argentina", lat: -34.6037, lng: -58.3816 },
+                { name: "Nairobi", country: "Kenya", lat: -1.2921, lng: 36.8219 }
+            ],
+            cities: [
+                { name: "New York City", country: "USA", lat: 40.7128, lng: -74.0060 },
+                { name: "Dubai", country: "UAE", lat: 25.2048, lng: 55.2708 },
+                { name: "Sydney", country: "Australia", lat: -33.8688, lng: 151.2093 },
+                { name: "Rio de Janeiro", country: "Brazil", lat: -22.9068, lng: -43.1729 },
+                { name: "Istanbul", country: "Turkey", lat: 41.0082, lng: 28.9784 },
+                { name: "Cape Town", country: "South Africa", lat: -33.9249, lng: 18.4241 },
+                { name: "Mumbai", country: "India", lat: 19.0760, lng: 72.8777 },
+                { name: "Shanghai", country: "China", lat: 31.2304, lng: 121.4737 },
+                { name: "Los Angeles", country: "USA", lat: 34.0522, lng: -118.2437 },
+                { name: "Singapore", country: "Singapore", lat: 1.3521, lng: 103.8198 }
+            ],
+            landmarks: [
+                { name: "Taj Mahal", country: "India", lat: 27.1751, lng: 78.0421 },
+                { name: "Machu Picchu", country: "Peru", lat: -13.1631, lng: -72.5450 },
+                { name: "Pyramids of Giza", country: "Egypt", lat: 29.9792, lng: 31.1342 },
+                { name: "Eiffel Tower", country: "France", lat: 48.8584, lng: 2.2945 },
+                { name: "Statue of Liberty", country: "USA", lat: 40.6892, lng: -74.0445 },
+                { name: "Colosseum", country: "Italy", lat: 41.8902, lng: 12.4922 },
+                { name: "Great Wall (Badaling)", country: "China", lat: 40.3593, lng: 116.0165 },
+                { name: "Sydney Opera House", country: "Australia", lat: -33.8568, lng: 151.2153 },
+                { name: "Christ the Redeemer", country: "Brazil", lat: -22.9519, lng: -43.2105 },
+                { name: "Petra", country: "Jordan", lat: 30.3285, lng: 35.4444 }
+            ]
+        };
+
+        class GeoGame {
+            constructor() {
+                this.map = null;
+                this.currentRound = 0;
+                this.totalScore = 0;
+                this.maxRounds = 5;
+                this.currentLocations = [];
+                this.userMarker = null;
+                this.targetMarker = null;
+                this.polyline = null;
+                this.startTime = 0;
+                this.timerInterval = null;
+                this.guessLatLng = null;
+                this.isGuessing = false;
+            }
+
+            initMap() {
+                if (this.map) return; // Already initialized
+
+                // Fallback for map element issues
+                const mapElement = document.getElementById('map');
+                if (!mapElement) {
+                    console.error("Map element not found");
+                    return;
+                }
+
+                // Initialize Leaflet
+                try {
+                    this.map = L.map('map', {
+                        zoomControl: false,
+                        minZoom: 2,
+                        maxBounds: [[-90, -180], [90, 180]],
+                        maxBoundsViscosity: 1.0
+                    }).setView([20, 0], 2);
+
+                    // Changed to OSM for better reliability
+                    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        maxZoom: 19,
+                        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    }).addTo(this.map);
+
+                    L.control.zoom({ position: 'topright' }).addTo(this.map);
+                    
+                    // Bind Click
+                    this.map.on('click', (e) => this.handleMapClick(e));
+
+                    // Force resize calculation to ensure tiles render
+                    setTimeout(() => {
+                        this.map.invalidateSize();
+                    }, 250);
+
+                    // Add listener for resize events
+                    window.addEventListener('resize', () => {
+                        if (this.map) this.map.invalidateSize();
+                    });
+
+                } catch (e) {
+                    console.error("Error initializing map:", e);
+                }
+            }
+
+            start(mode) {
+                // Ensure map is initialized (just in case)
+                this.initMap();
+
+                // Setup Game Data
+                let pool = [...GAME_DATA[mode]];
+                pool.sort(() => 0.5 - Math.random());
+                this.currentLocations = pool.slice(0, this.maxRounds);
+                
+                // Reset Stats
+                this.currentRound = 0;
+                this.totalScore = 0;
+                this.updateStats();
+
+                // UI Transition
+                document.getElementById('start-screen').style.display = 'none';
+                document.getElementById('game-stats').classList.remove('opacity-0');
+                document.getElementById('task-bar').classList.remove('-translate-y-32');
+                
+                // Force map resize calculation again now that it is fully visible
+                setTimeout(() => {
+                    if(this.map) {
+                        this.map.invalidateSize();
+                    }
+                }, 100);
+
+                this.startRound();
+            }
+
+            startRound() {
+                this.isGuessing = true;
+                this.guessLatLng = null;
+                
+                // Clean map
+                if (this.userMarker) this.map.removeLayer(this.userMarker);
+                if (this.targetMarker) this.map.removeLayer(this.targetMarker);
+                if (this.polyline) this.map.removeLayer(this.polyline);
+
+                this.userMarker = null;
+                this.targetMarker = null;
+                this.polyline = null;
+
+                // Reset View
+                this.map.setView([20, 0], 2, { animate: true, duration: 1 });
+                
+                // Hide confirm button
+                document.getElementById('confirm-btn').classList.add('scale-0');
+
+                // Update HUD
+                const target = this.currentLocations[this.currentRound];
+                document.getElementById('target-name').innerHTML = `${target.name} <span class="font-normal text-slate-500 text-base">(${target.country})</span>`;
+                document.getElementById('level-display').innerText = `${this.currentRound + 1}/${this.maxRounds}`;
+
+                // Start Timer
+                this.startTime = Date.now();
+                this.updateTimer();
+                if (this.timerInterval) clearInterval(this.timerInterval);
+                this.timerInterval = setInterval(() => this.updateTimer(), 100);
+            }
+
+            updateTimer() {
+                const elapsed = (Date.now() - this.startTime) / 1000;
+                document.getElementById('timer-display').innerText = elapsed.toFixed(1) + 's';
+            }
+
+            handleMapClick(e) {
+                if (!this.isGuessing) return;
+
+                this.guessLatLng = e.latlng;
+
+                const icon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div class='marker-pin guess'></div>`,
+                    iconSize: [30, 42],
+                    iconAnchor: [15, 42]
+                });
+
+                if (this.userMarker) {
+                    this.userMarker.setLatLng(e.latlng);
+                } else {
+                    this.userMarker = L.marker(e.latlng, { icon: icon }).addTo(this.map);
+                }
+
+                document.getElementById('confirm-btn').classList.remove('scale-0');
+            }
+
+            confirmGuess() {
+                if (!this.guessLatLng) return;
+                
+                clearInterval(this.timerInterval);
+                this.isGuessing = false;
+                document.getElementById('confirm-btn').classList.add('scale-0');
+
+                const target = this.currentLocations[this.currentRound];
+                const targetLatLng = L.latLng(target.lat, target.lng);
+
+                // Show Target
+                const targetIcon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div class='marker-pin actual'><div class='pulse-ring'></div></div>`,
+                    iconSize: [30, 42],
+                    iconAnchor: [15, 42]
+                });
+
+                this.targetMarker = L.marker(targetLatLng, { icon: targetIcon }).addTo(this.map);
+
+                // Draw Line
+                const latlngs = [this.guessLatLng, targetLatLng];
+                this.polyline = L.polyline(latlngs, {
+                    color: '#475569',
+                    weight: 3,
+                    opacity: 0.7,
+                    dashArray: '10, 10',
+                    lineCap: 'round'
+                }).addTo(this.map);
+
+                // Calculate Logic
+                const distKm = this.map.distance(this.guessLatLng, targetLatLng) / 1000;
+                
+                const timeTaken = (Date.now() - this.startTime) / 1000;
+                
+                // Scoring
+                let distScore = 5000 * Math.exp(-distKm / 2000); 
+                if (distKm < 50) distScore = 5000; 
+
+                let timeBonus = Math.max(0, 1000 - (timeTaken * 50));
+                if (distKm > 4000) timeBonus = 0; 
+
+                const roundPoints = Math.round(distScore + timeBonus);
+                this.totalScore += roundPoints;
+                this.updateStats();
+
+                // Fit Bounds
+                this.map.fitBounds(L.latLngBounds(latlngs).pad(0.2));
+
+                // Result
+                setTimeout(() => {
+                    this.showResultModal(distKm, roundPoints);
+                }, 800);
+            }
+
+            showResultModal(dist, points) {
+                const modal = document.getElementById('result-screen');
+                const badge = document.getElementById('result-badge');
+                const title = document.getElementById('result-title');
+                const msg = document.getElementById('result-message');
+                
+                modal.classList.remove('hidden');
+                
+                const distStr = dist < 1 ? Math.round(dist*1000) + " m" : Math.round(dist).toLocaleString() + " km";
+                document.getElementById('result-distance').innerText = distStr;
+                document.getElementById('result-points').innerText = `+${points}`;
+
+                if (dist < 50) {
+                    badge.className = "bg-green-500 text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg border-4 border-white";
+                    badge.innerText = "A+";
+                    title.innerText = "Perfect!";
+                    msg.innerText = "You are a living atlas!";
+                } else if (dist < 500) {
+                    badge.className = "bg-blue-500 text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg border-4 border-white";
+                    badge.innerText = "A";
+                    title.innerText = "Excellent";
+                    msg.innerText = "Very close guess.";
+                } else if (dist < 1500) {
+                    badge.className = "bg-yellow-500 text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg border-4 border-white";
+                    badge.innerText = "B";
+                    title.innerText = "Good";
+                    msg.innerText = "You're in the right region.";
+                } else {
+                    badge.className = "bg-slate-400 text-white w-16 h-16 rounded-full flex items-center justify-center text-2xl font-bold shadow-lg border-4 border-white";
+                    badge.innerText = "C";
+                    title.innerText = "Missed it";
+                    msg.innerText = "Better luck next time.";
+                }
+
+                const btn = document.getElementById('next-btn');
+                if (this.currentRound >= this.maxRounds - 1) {
+                    btn.innerText = "Finish Game";
+                    btn.onclick = () => window.game.finishGame();
+                } else {
+                    btn.innerText = "Next Location";
+                    btn.onclick = () => window.game.nextRound();
+                }
+            }
+
+            nextRound() {
+                document.getElementById('result-screen').classList.add('hidden');
+                this.currentRound++;
+                this.startRound();
+            }
+
+            finishGame() {
+                document.getElementById('result-screen').classList.add('hidden');
+                document.getElementById('game-over-screen').classList.remove('hidden');
+                document.getElementById('final-score').innerText = this.totalScore.toLocaleString();
+            }
+
+            updateStats() {
+                document.getElementById('score-display').innerText = this.totalScore.toLocaleString();
+            }
+        }
+
+        // Init when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            window.game = new GeoGame();
+            
+            // Init Map immediately to show background
+            window.game.initMap();
+
+            // Bind Confirm Button
+            document.getElementById('confirm-btn').addEventListener('click', () => {
+                window.game.confirmGuess();
+            });
+        });
+
+    </script>
+</body>
+</html>
